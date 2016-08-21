@@ -24,10 +24,6 @@ memorySize = 30000
 printUsage :: IO ()
 printUsage = putStrLn "chunky-vomit <file>"
 
-runProgram      :: String -> IO ()
-runProgram file = do source <- readFile file
-                     exec source
-
 programSize   :: Program -> Int
 programSize p = let (_, size) = IArray.bounds p
                 in size
@@ -111,9 +107,16 @@ exec p = do
                  -- ignore comments
                  _ -> exec' program (succ read) tape ptr
 
+
+readSourceFile :: String -> IO String
+readSourceFile = readFile
+
+readSource :: IO String
+readSource = getContents
+
+runInterpreter :: [String] -> IO ()
+runInterpreter []       = printUsage
+runInterpreter (file:_) = readSourceFile file >>= exec
+
 main :: IO ()
-main = do args <- Env.getArgs
-          if null args
-             then printUsage
-             else let (file:_) = args
-                  in do runProgram file
+main = Env.getArgs >>= runInterpreter
