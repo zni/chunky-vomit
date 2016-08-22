@@ -30,30 +30,30 @@ programSize p = let (_, size) = IArray.bounds p
 
  -- Find matching ']'.
 fastForward :: Program -> ReadPos -> ReadPos
-fastForward prgm pos = fastForward' prgm (succ pos) ['[']
+fastForward prgm pos = fastForward' prgm (succ pos) 1
 
-fastForward' :: Program -> ReadPos -> [Char] -> ReadPos
-fastForward' prgm pos [] = pos  
+fastForward' :: Program -> ReadPos -> Int -> ReadPos
+fastForward' _ pos 0 = pos
 fastForward' prgm pos seen
   | pos > (programSize prgm) = error "missing matching ']' brace"
   | otherwise = let ins = prgm IArray.! pos
                 in case ins of
-                     '[' -> fastForward' prgm (succ pos) (ins:seen)
-                     ']' -> fastForward' prgm (succ pos) (tail seen)
+                     '[' -> fastForward' prgm (succ pos) (succ seen)
+                     ']' -> fastForward' prgm (succ pos) (pred seen)
                      _   -> fastForward' prgm (succ pos) seen
 
  -- Find matching '['.
 rewind :: Program -> ReadPos -> ReadPos
-rewind prgm pos = rewind' prgm (pred pos) [']']
+rewind prgm pos = rewind' prgm (pred pos) 1
 
-rewind' :: Program -> ReadPos -> [Char] -> ReadPos
-rewind' prgm pos [] = succ $ succ pos
+rewind' :: Program -> ReadPos -> Int -> ReadPos
+rewind' _ pos 0 = succ $ succ pos
 rewind' prgm pos seen
   | pos < 0 = error "missing matching '[' brace"
   | otherwise = let ins = prgm IArray.! pos
                 in case ins of
-                     ']' -> rewind' prgm (pred pos) (ins:seen)
-                     '[' -> rewind' prgm (pred pos) (tail seen)
+                     ']' -> rewind' prgm (pred pos) (succ seen)
+                     '[' -> rewind' prgm (pred pos) (pred seen)
                      _   -> rewind' prgm (pred pos) seen
 
 exec   :: String -> IO ()
